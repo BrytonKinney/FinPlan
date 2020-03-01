@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FinPlan.BackEnd.Data;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace FinPlan.BackEnd.Services.Interfaces
     public interface IFileUploadService
     {
         Task HandleUploadRequestAsync(Microsoft.AspNetCore.Http.HttpRequest request);
-        Task HandleUploadRequestAsync(IFormFile file);
+        Task<IEnumerable<Transaction>> HandleUploadRequestAsync(IFormFile file);
     }
 }

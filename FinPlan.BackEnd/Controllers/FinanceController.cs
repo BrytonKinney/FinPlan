@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FinPlan.BackEnd.Attributes;
 using FinPlan.BackEnd.Services.Interfaces;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,12 +28,12 @@ namespace FinPlan.BackEnd.Controllers
         /// </summary>
         /// <returns></returns>
         [GenerateAntiforgeryTokenCookie]
-        [DisableFormValueModelBinding]
+        [EnableCors("CorsOrigins")]
         [HttpPost("upload")]
         public async Task<IActionResult> UploadAccountStatementFile(IFormFile file)
         {
-            await _fileUploadService.HandleUploadRequestAsync(file);
-            return Ok();
+            var result = await _fileUploadService.HandleUploadRequestAsync(file).ConfigureAwait(false);
+            return Ok(result);
         }
     }
 }

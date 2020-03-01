@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using FinPlan.BackEnd.Data;
 using FinPlan.BackEnd.Services.Impl;
 using FinPlan.BackEnd.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,6 +34,16 @@ namespace FinPlan.BackEnd
         {
             services.AddControllers();
             services.AddAntiforgery();
+            services.AddCors(opts =>
+            {
+                opts.AddPolicy("CorsOrigins", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+            });
+            services.AddDbContext<FinPlanContext>(opts => opts.UseNpgsql(Configuration.GetConnectionString("FinPlanDatabase")));
             services.Configure<FormOptions>(opts =>
             {
                 opts.MultipartBodyLengthLimit = 268435456; // 256 mb
@@ -43,11 +55,8 @@ namespace FinPlan.BackEnd
                     Title = "FinPlan API",
                     Version = "v1"
                 });
-                // Set the comments path for the Swagger JSON and UI.
-                //var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                //var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                //cfg.IncludeXmlComments(xmlPath);
             });
+            services.AddScoped<ICsvParser, CsvParser>();
             services.AddScoped<IFileUploadService, FileUploadService>();
         }
 
@@ -63,11 +72,10 @@ namespace FinPlan.BackEnd
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
+            app.UseCors("CorsOrigins");
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {

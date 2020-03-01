@@ -1,4 +1,5 @@
-﻿using FinPlan.BackEnd.Services.Interfaces;
+﻿using FinPlan.BackEnd.Data;
+using FinPlan.BackEnd.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
@@ -14,11 +15,18 @@ namespace FinPlan.BackEnd.Services.Impl
     {
         private const int MULTIPART_BOUNDARY_LENGTH_LIMIT = 70;
 
-        public async Task HandleUploadRequestAsync(IFormFile file)
+        private readonly ICsvParser _csvParser;
+        public FileUploadService(ICsvParser csvParser)
         {
-            using (var fileStream = File.Create(Path.GetRandomFileName() + ".csv"))
+            _csvParser = csvParser;
+        }
+
+        public async Task<IEnumerable<Transaction>> HandleUploadRequestAsync(IFormFile file)
+        {
+            using (var fileStream = File.Create(Path.Combine("../data", $"{Path.GetRandomFileName()}{Path.GetExtension(file.FileName)}")))
             {
                 await file.CopyToAsync(fileStream);
+                return await _csvParser.ParseFileAsync(file.OpenReadStream());
             }
         }
         public async Task HandleUploadRequestAsync(HttpRequest request)
